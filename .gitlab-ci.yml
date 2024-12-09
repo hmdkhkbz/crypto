@@ -1,0 +1,51 @@
+stages:
+  - build_and_push
+  - update_argo
+
+variables:
+  CI_REGISTRY: registry.hmdkh.ir
+  IMAGE_NAME: crypto
+  DOCKER_USERNAME: quranapi
+  ARGOCD_REPO_URL: https://gitlab.hmdkh.ir/root/develop.git  # Update with your repo URL
+  ARGOCD_REPO_PATH: .  # Path to your ArgoCD manifest directory within the repo
+  ARGOCD_REPO_BRANCH: master  # Branch of the ArgoCD repo to update
+  MANIFEST_FILE_PATH: ./app/statefulset.yaml  # Path to the manifest file
+  NEW_VERSION: "1.0.${CI_PIPELINE_ID}"
+
+build_and_push_image:
+  stage: build_and_push
+  script:
+    - echo "Checking for version file..."
+    - apk add --no-cache bash  # Install bash if it's not available
+    - echo "Building the Docker image..."
+    - docker build -t $CI_REGISTRY/$IMAGE_NAME:$NEW_VERSION .
+      # Verify that the image exists and list images
+    - docker images
+            # Push the Docker image to the registry with the new version tag
+    - echo "Pushing the Docker image to the registry..."
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY/$IMAGE_NAME:$NEW_VERSION
+
+  only:
+    - main
+
+update_argo_cd_repo:
+  stage: update_argo
+  script:
+    - echo "Cloning ArgoCD repo..."
+    - apk add --no-cache git curl bash envsubst openssh
+    - git clone $ARGOCD_REPO_URL 
+    - cd develop/
+    - git checkout $ARGOCD_REPO_BRANCH
+    - echo "Current version $NEW_VERSION"
+    - echo "Updating image tag in the manifest file..."
+    - sed -i "s/\(registry.hmdkh.ir\/crypto:\)[^ ]*/\1$NEW_VERSION/g" ./app/statefulset.yaml # Replace image tag
+    - echo "Committing changes to the ArgoCD repository..."
+    - git config --global user.email "gitlab@hmdkhkbzz.ir"
+    - git config user.name "root"
+    - git add app/statefulset.yaml
+    - git commit -m "Update image tag to $NEW_VERSION"
+    - git push https://root:$CI_JOB_TOKEN@gitlab.hmdkh.ir/root/develop.git master
+    - echo "new version tag is $NEW_VERSION"
+  only:
+    - main
