@@ -1,3 +1,5 @@
+revised by: hkh
+
 # crypto
 
 
