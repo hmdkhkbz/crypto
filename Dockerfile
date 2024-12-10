@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Apply database migrations and collect static files
 ##RUN python /usr/src/app/Exchange/manage.py migrate
-RUN python /usr/src/app/manage.py collectstatic --noinput
+RUN python /usr/src/app/manage.py collectstatic --noinput --verbosity 3
 
 # Expose the port for the app
 EXPOSE 8000
