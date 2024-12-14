@@ -1,4 +1,4 @@
-image: docker.io/docker:27.4.0-dind-alpine3.21
+image: docker.io/docker:20.10.8-dind
 
 stages:
   - build_and_push
