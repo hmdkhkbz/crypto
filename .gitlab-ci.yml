@@ -1,4 +1,4 @@
-image: docker:dind-rootless
+image: docker.io/docker:27.4.0-dind-alpine3.21
 
 stages:
   - build_and_push
