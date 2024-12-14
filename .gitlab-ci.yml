@@ -1,3 +1,5 @@
+image: docker.io/hmdkhkbz/dind:latest
+
 stages:
   - build_and_push
   - staging
@@ -13,12 +15,8 @@ variables:
   MANIFEST_FILE_PATH: ./app/statefulset.yaml  # Path to the manifest file
   NEW_VERSION: "1.0.${CI_PIPELINE_ID}"
 
-before_script:
-  - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin $CI_REGISTRY
-
 build_and_push_image:
   stage: build_and_push
-  image: $CI_REGISTRY/docker:latest
   script:
     - echo "Checking for version file..."
     - apk add --no-cache bash  # Install bash if it's not available
@@ -36,7 +34,6 @@ build_and_push_image:
 
 staging:
   stage: staging
-  image: $CI_REGISTRY/docker:latest
   script:
     - echo "Cloning ArgoCD repo..."
     - apk add --no-cache git curl bash envsubst openssh
@@ -58,7 +55,6 @@ staging:
 
 update_argo_cd_repo:
   stage: production
-  image: $CI_REGISTRY/docker:latest
   script:
     - echo "Cloning ArgoCD repo..."
     - apk add --no-cache git curl bash envsubst openssh
