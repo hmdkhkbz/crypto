@@ -1,6 +1,7 @@
 stages:
   - build_and_push
-  - update_argo
+  - staging
+  - production
 
 variables:
   CI_REGISTRY: registry.hmdkh.ir
@@ -30,7 +31,28 @@ build_and_push_image:
     - main
 
 update_argo_cd_repo:
-  stage: update_argo
+  stage: staging
+  script:
+    - echo "Cloning ArgoCD repo..."
+    - apk add --no-cache git curl bash envsubst openssh
+    - git clone $Staging_repo 
+    - cd staging/
+    - git checkout $ARGOCD_REPO_BRANCH
+    - echo "Current version $NEW_VERSION"
+    - echo "Updating image tag in the manifest file..."
+    - sed -i "s/\(registry.hmdkh.ir\/crypto:\)[^ ]*/\1$NEW_VERSION/g" ./app/statefulset.yaml # Replace image tag
+    - echo "Committing changes to the ArgoCD repository..."
+    - git config --global user.email "gitlab@hmdkhkbzz.ir"
+    - git config user.name "root"
+    - git add app/statefulset.yaml
+    - git commit -m "Update image tag to $NEW_VERSION"
+    - git push https://root:$Staging_token@gitlab.hmdkh.ir/root/staging.git master
+    - echo "new version tag is $NEW_VERSION"
+  only:
+    - main
+
+update_argo_cd_repo:
+  stage: production
   script:
     - echo "Cloning ArgoCD repo..."
     - apk add --no-cache git curl bash envsubst openssh
@@ -47,5 +69,6 @@ update_argo_cd_repo:
     - git commit -m "Update image tag to $NEW_VERSION"
     - git push https://root:$CI_JOB_TOKEN@gitlab.hmdkh.ir/root/develop.git master
     - echo "new version tag is $NEW_VERSION"
+  when: manual
   only:
     - main
