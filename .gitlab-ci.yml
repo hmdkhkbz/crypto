@@ -1,4 +1,4 @@
-image: docker.io/docker:20.10.8-dind
+image: docker.io/docker:27.4.0-rc.1-dind-rootless
 
 stages:
   - build_and_push
@@ -36,8 +36,7 @@ staging:
   stage: staging
   script:
     - echo "Cloning ArgoCD repo..."
-  ###  - apk add --no-cache git curl bash envsubst openssh
-    - apk add --no-cache git curl bash gettext openssh
+    - apk add --no-cache git curl bash envsubst openssh
     - git clone $Staging_repo 
     - cd staging/
     - git checkout $ARGOCD_REPO_BRANCH
